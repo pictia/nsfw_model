@@ -11,6 +11,8 @@ import tensorflow_hub as hub
 import base64
 from PIL import Image
 import keras
+import io
+
 
 IMAGE_DIM = 224   # required/default image dimensionality
 
@@ -39,7 +41,6 @@ def load_images(images_b64, image_size, verbose=True):
 
 	for image_b64 in images_b64:
 		try:
-			import io
 			image_bytes = base64.b64decode(image_b64)
 			img = Image.open(io.BytesIO(image_bytes))
 			loaded_images.append(prepare_image(img, image_size))
