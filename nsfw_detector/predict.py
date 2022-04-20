@@ -9,23 +9,17 @@ import tensorflow as tf
 from tensorflow import keras
 import tensorflow_hub as hub
 import base64
-import cv2
 from PIL import Image
 import keras
 
 IMAGE_DIM = 224   # required/default image dimensionality
 
 def prepare_image(img, image_size):
-	# convert the color from BGR to RGB then convert to PIL array
-	im_pil = Image.fromarray(img)
-
 	# resize the array (image) then PIL image
-	im_resized = im_pil.resize(image_size)
+	im_resized = img.resize(image_size)
 	img_array = keras.preprocessing.image.img_to_array(im_resized)
 	img_array /= 255
 	return img_array
-
-
 
 def load_images(images_b64, image_size, verbose=True):
 	'''
@@ -45,9 +39,9 @@ def load_images(images_b64, image_size, verbose=True):
 
 	for image_b64 in images_b64:
 		try:
+			import io
 			image_bytes = base64.b64decode(image_b64)
-			nparr = np.frombuffer(image_bytes, np.uint8)
-			img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+			img = Image.open(io.BytesIO(image_bytes))
 			loaded_images.append(prepare_image(img, image_size))
 		except Exception as ex:
 			raise ex
@@ -63,11 +57,11 @@ def load_model(model_path):
 	return model
 
 
-def classify(model, input_paths, image_dim=IMAGE_DIM):
+def classify(model, input_paths, input_bytes, image_dim=IMAGE_DIM):
 	""" Classify given a model, input paths (could be single string), and image dimensionality...."""
-	images = load_images(input_paths, (image_dim, image_dim))
+	images = load_images(input_bytes, (image_dim, image_dim))
 	probs = classify_nd(model, images)
-	return probs
+	return dict(zip(input_paths, probs))
 
 
 def classify_nd(model, nd_images):
